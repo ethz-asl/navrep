@@ -52,7 +52,7 @@
 
   <!-- RVO Planner -->
   <node pkg="ros_run_command" type="ros_run_command" name="navrep_node" output="screen" 
-    args="python ~/Code/navigation_representations/navrep/scripts/ros_run_navrep --ian-topics" >
+    args="python ~/Code/navrep/navrep/scripts/ros_run_navrep --ian-topics" >
     <!-- these remaps don't work (ros_run_command?) -->
     <remap from="/stop_autonomous_motion" to="/rvo_planner/stop_autonomous_motion" />
     <remap from="/resume_autonomous_motion" to="/rvo_planner/resume_autonomous_motion" />

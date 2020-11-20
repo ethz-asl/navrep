@@ -43,7 +43,7 @@
 <!--   _________________________________________________- -->
 
   <node pkg="ros_run_command" type="ros_run_command" name="navrep_node" output="screen"
-    args="python ~/Code/navigation_representations/navrep/scripts/ros_run_navrep"
+    args="python ~/Code/navrep/navrep/scripts/ros_run_navrep"
   />
 
   <node pkg="rviz" type="rviz" name="rviz" output="log"

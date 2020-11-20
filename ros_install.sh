@@ -5,7 +5,7 @@ cp ~/Code/pepper_ws/devel/lib/python2.7/dist-packages/spencer_tracking_msgs ~/pe
 # to source
 # source ~/Code/pepper_ws/devel/setup.bash
 # source ~/pepper3venv/bin/activate
-# cd ~/Code/navigation_representations
+# cd ~/Code/navrep
 
 
 

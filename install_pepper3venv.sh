@@ -24,7 +24,7 @@ pip install keras==2.3.1 catkin_pkg # needed by deep_social_planner
 # # pip install --user torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html  # for the cluster
 # # pip install --user tensorflow==1.13.2  # for the cluster
 
-cd ~/Code/navigation_representations
+cd ~/Code/navrep
 pip install -e .
 
 # SOADRL
@@ -57,13 +57,13 @@ cd ~/Code/pepper_ws/src/Python-RVO2
 pip install -e .
 
 # ros python dependencies
-# cp ~/Code/navigation_representations/external/frame_msgs ~/pepper3venv/lib/python3.6/site-packages/ -r
-# cp ~/Code/navigation_representations/external/tf_bag ~/pepper3venv/lib/python3.6/site-packages/ -r  # used in make_vae_dataset --env irl
+# cp ~/Code/navrep/external/frame_msgs ~/pepper3venv/lib/python3.6/site-packages/ -r
+# cp ~/Code/navrep/external/tf_bag ~/pepper3venv/lib/python3.6/site-packages/ -r  # used in make_vae_dataset --env irl
 pip install --extra-index-url https://rospypi.github.io/simple/ rospy rosbag tf tf2_ros
 
 # if CLUSTER:
-# # cp ~/Code/navigation_representations/external/frame_msgs ~/.local/lib64/python3.6/site-packages/ -r
-# # cp ~/Code/navigation_representations/external/tf_bag ~/.local/lib64/python3.6/site-packages/ -r
+# # cp ~/Code/navrep/external/frame_msgs ~/.local/lib64/python3.6/site-packages/ -r
+# # cp ~/Code/navrep/external/tf_bag ~/.local/lib64/python3.6/site-packages/ -r
 
 # maps
-ln -s -i ~/Code/navigation_representations/maps ~/maps
+ln -s -i ~/Code/navrep/maps ~/maps

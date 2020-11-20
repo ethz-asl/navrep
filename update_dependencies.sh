@@ -15,7 +15,7 @@ git clone git@github.com:danieldugas/Python-RVO2.git
 
 cd ~/Code/pyniel && git pull
 cd ~/Code/deep_social_planner && git pull
-cd ~/Code/navigation_representations && git pull
+cd ~/Code/navrep && git pull
 cd ~/Code/pepper_ws/src/asl_pepper && git pull
 cd ~/Code/pepper_ws/src/range_libc && git pull
 cd ~/Code/pepper_ws/src/pymap2d && git pull
