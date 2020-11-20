@@ -79,7 +79,10 @@ Press `w, a, s, d` to move around, `shift` to speed up the simulation.
 ![markenv2](media/markenv2.gif)
 
 
-## NavRep
+## Reproducing NavRep
+
+The following is an example of how to reproduce the results in the NavRep paper.
+It is a subset of the full procedure, which can be found in the [worflow_navrep](navrep/scripts/workflow_navrep.sh) file.
 
 ### make a V dataset
 
