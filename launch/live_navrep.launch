@@ -1,0 +1,54 @@
+<launch>
+<!--   <arg name="mapname" default="asl_office_j" /> -->
+  <arg name="mapname" default="hg_main_hall" />
+  <arg name="mapfolder" default="$(env HOME)/maps"/>
+  <arg name="ia_downsampling_passes" default="1"/>
+  <arg name="localization" default="false"/>  <!-- if disabled uses g.t. loc from sim -->
+
+  <!-- Gmapping & Map Matching -->
+  <include file="$(find asl_pepper_gmapping)/launch/gmapping.launch" >
+    <arg name="output" value="log"/>
+  </include>
+  <!-- If localization enabled, map matcher -->
+  <include file="$(find map_matcher)/launch/map_matcher.launch" if="$(arg localization)">
+    <arg name="output" value="log" />
+    <arg name="slam_map_topic" value="/gmap"/>
+    <arg name="reference_map_name" value="$(arg mapname)"/>
+    <arg name="reference_map_downsampling_passes" value="$(arg ia_downsampling_passes)"/>
+    <arg name="maps_folder" value="$(arg mapfolder)"/>
+    <arg name="launch_prefix" value="nice -n 20" />
+  </include>
+
+  <!-- Patroller -->
+  <node pkg="asl_pepper_motion_planning" type="patroller"
+    name="patroller" args="" output="screen" >
+<!--     <param name="static_frame" value="reference_map"/> -->
+    <param name="static_frame" value="gmap"/>
+    <param name="robot_frame" value="base_footprint"/>
+    <param name="goal_reached_radius" value="0.5"/>
+  </node>
+
+  <!-- Global Path Planning -->
+  <node pkg="asl_pepper_motion_planning" type="global_planner"
+    name="global_planner" args="--hz" output="log" >
+<!--     <param name="reference_map_name" value="$(arg mapname)"/> -->
+<!--     <param name="reference_map_folder" value="$(arg mapfolder)"/> -->
+<!--     <param name="reference_map_downsampling_passes" value="$(arg ia_downsampling_passes)" /> -->
+    <param name="reference_map_name" value="/gmap"/>
+    <param name="reference_map_folder" value="rostopic"/>
+    <param name="reference_map_frame" value="gmap"/>
+  </node>
+
+<!--   NavRep Planner -->
+<!--   _________________________________________________- -->
+
+  <node pkg="ros_run_command" type="ros_run_command" name="navrep_node" output="screen"
+    args="python ~/Code/navigation_representations/navrep/scripts/ros_run_navrep"
+  />
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log"
+    args="-d $(find asl_pepper_gmapping)/../rviz/live_navrep.rviz"
+  />
+
+
+</launch> 

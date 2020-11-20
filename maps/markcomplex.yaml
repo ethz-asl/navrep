@@ -1,0 +1,9 @@
+image: markcomplex.pgm
+resolution: 0.017  # 1.7x bigger as robot radius larger
+origin: [-12, -6, 0.]
+# resolution: 0.01
+# origin: [-7., -3.5, 0.]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.15 #0.196
+

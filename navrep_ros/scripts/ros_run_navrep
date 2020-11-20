@@ -1,0 +1,210 @@
+#!/usr/bin/env python
+from __future__ import print_function
+from copy import deepcopy
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+import numpy as np
+import os
+from pose2d import Pose2D, apply_tf
+import rospy
+from timeit import default_timer as timer
+from sensor_msgs.msg import LaserScan
+from stable_baselines import PPO2
+from std_srvs.srv import Trigger, TriggerResponse
+from std_msgs.msg import Header
+from visualization_msgs.msg import Marker
+from pepper_2d_simulator import remove_python2_entries_from_sys_path
+import threading
+
+from navrep.envs.navreptrainencodedenv import NavRepTrainEncoder
+from navrep.tools.commonargs import parse_rosnode_args
+
+remove_python2_entries_from_sys_path()
+if True:
+    import tf
+    from tf2_ros import TransformException
+
+RENDER = False
+
+BACKEND = "GPT"
+ENCODING = "V_ONLY"
+GPU = False
+
+NO_ROTATION = False
+
+C_MODEL_PATH = os.path.expanduser("~/navrep/models/gym/navreptrainencodedenv_latest_PPO_ckpt")
+
+def noop(*args, **kwargs):
+    return TriggerResponse(True, "")
+
+class NavrepNode(object):
+    def __init__(self, args):
+        rospy.init_node("navrep_node")
+        self.tf_listener = tf.TransformListener()
+        # constants
+        self.kRobotFrame = "base_footprint"
+        self.tf_timeout = rospy.Duration(1.0)
+        # V + M  encoder
+        self.encoder = NavRepTrainEncoder(BACKEND, ENCODING, gpu=GPU)
+        # C model
+        self.model = PPO2.load(C_MODEL_PATH)
+        # init variables
+        self.goal_msg = None
+        self.latest_odom = None
+        self.prev_action = np.array([0., 0., 0.])
+        self.STOP = True
+        if args.no_stop:
+            self.STOP = False
+        self.args = args
+        self.lock = threading.Lock()
+        # Services
+        if args.ian_topics:
+            rospy.Service('/rvo_planner/stop_autonomous_motion', Trigger,
+                          self.stop_autonomous_motion_service_call)
+            rospy.Service('/rvo_planner/resume_autonomous_motion', Trigger,
+                          self.resume_autonomous_motion_service_call)
+            rospy.Service('/responsive/stop_autonomous_motion', Trigger, noop)
+            rospy.Service('/disable_gestures', Trigger, noop)
+        else:
+            rospy.Service('stop_autonomous_motion', Trigger,
+                          self.stop_autonomous_motion_service_call)
+            rospy.Service('resume_autonomous_motion', Trigger,
+                          self.resume_autonomous_motion_service_call)
+        # Ros routines
+        rospy.Subscriber("/combined_scan", LaserScan, self.callback, queue_size=1)
+        if args.ian_topics:
+            rospy.Subscriber("/rvo_planner/waypoint", Marker, self.waypoint_callback, queue_size=1)
+        else:
+            rospy.Subscriber("/global_planner/current_waypoint", Marker, self.waypoint_callback, queue_size=1)
+        rospy.Subscriber("/pepper_robot/odom", Odometry, self.odom_callback, queue_size=1)
+        rospy.Subscriber("/goal_reached", Header, self.goal_reached_callback, queue_size=1)
+        self.lidar_pub = rospy.Publisher("/reconstructed_scan", LaserScan, queue_size=1)
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        rospy.spin()
+
+    def callback(self, msg):
+        with self.lock:
+            if self.latest_odom is None:
+                return
+            if self.goal_msg is None:
+                return
+            # compute goal in robot frame
+            tf_msg_in_robot = self.get_msg_to_robot_tf(self.goal_msg, time=rospy.Time.now())
+            if tf_msg_in_robot is None:
+                return
+            pose2d_msg_in_robot = Pose2D(tf_msg_in_robot)
+            goal_in_msg = np.array([self.goal_msg.pose.position.x, self.goal_msg.pose.position.y])
+            goal_in_robot = apply_tf(goal_in_msg, pose2d_msg_in_robot)
+            # TODO: is the scan start angle the same as in RL env?
+            lidar = np.zeros((1, 1080, 1))
+            lidar[0, :, 0] = msg.ranges
+            robot_state = np.zeros((5,))
+            # in robot frame:
+            robot_state[0] = goal_in_robot[0]
+            robot_state[1] = goal_in_robot[1]
+            robot_state[2] = self.latest_odom.twist.twist.linear.x
+            robot_state[3] = self.latest_odom.twist.twist.linear.y
+            robot_state[4] = self.latest_odom.twist.twist.angular.z
+            obs = (lidar, robot_state)
+
+            # holonomic C action
+            tic = timer()
+            encoded_obs = self.encoder._encode_obs(obs, self.prev_action)
+            xy_action, _ = self.model.predict(encoded_obs, deterministic=True)
+            toc = timer()
+            if self.args.hz:
+                print("Inference: {}s".format(toc-tic))
+
+            # rotate towards goal
+            goal_angle = np.arctan2(goal_in_robot[1], goal_in_robot[0])
+            rot_action = goal_angle / 10.  # [-pi,pi] -> [-0.3,0.3]
+            if abs(rot_action) < 0.1:
+                rot_action = 0.
+            if NO_ROTATION:
+                rot_action = 0.
+
+            # store action
+            action = np.array([xy_action[0], xy_action[1], rot_action])
+            self.prev_action = action
+
+            if RENDER:
+                self.encoder._render_rings()
+            # ros publish
+            out_msg = deepcopy(msg)
+            predicted_ranges = self.encoder._get_last_decoded_scan()
+            out_msg.ranges = tuple(predicted_ranges)
+            self.lidar_pub.publish(out_msg)
+
+            # post-process
+            postproc_action = action * 1.
+            postproc_action[0] = postproc_action[0] * 0.2
+            postproc_action[1] = postproc_action[1] * 0.2
+
+            if not self.STOP:
+                print(postproc_action)
+                cmd_vel_msg = Twist()
+                cmd_vel_msg.linear.x = postproc_action[0]
+                cmd_vel_msg.linear.y = postproc_action[1]
+                cmd_vel_msg.angular.z = postproc_action[2]
+                self.cmd_vel_pub.publish(cmd_vel_msg)
+            else:
+                print(postproc_action, "STOPPED")
+
+    def get_msg_to_robot_tf(self, msg, time):
+        try:
+            tf_info = [self.kRobotFrame, msg.header.frame_id, time]
+            self.tf_listener.waitForTransform(*(tf_info + [self.tf_timeout]))
+            tf_msg_in_robot = self.tf_listener.lookupTransform(*tf_info)
+        except (
+            tf.LookupException,
+            tf.ConnectivityException,
+            tf.ExtrapolationException,
+            TransformException,
+        ) as e:
+            rospy.logwarn(
+                "[{}.{}] tf to robot frame for time {}.{} not found: {}".format(
+                    rospy.Time.now().secs,
+                    rospy.Time.now().nsecs,
+                    time.secs,
+                    time.nsecs,
+                    e,
+                )
+            )
+            return None
+        return tf_msg_in_robot
+
+    def waypoint_callback(self, msg):
+        with self.lock:
+            self.goal_msg = msg
+
+    def goal_reached_callback(self, msg):
+        with self.lock:
+            print("goal reached")
+            self.goal_msg = None
+
+    def odom_callback(self, msg):
+        with self.lock:
+            self.latest_odom = msg
+
+    def stop_autonomous_motion_service_call(self, req):
+        with self.lock:
+            if not self.STOP:
+                print("Surrendering robot control")
+                cmd_vel_msg = Twist()
+                self.cmd_vel_pub.publish(cmd_vel_msg)
+            self.STOP = True
+        return TriggerResponse(True, "")
+
+    def resume_autonomous_motion_service_call(self, req):
+        with self.lock:
+            if self.STOP:
+                print("Assuming robot control")
+                # assume old goal is stale, wait for new goal
+                self.goal_msg = None
+            self.STOP = False
+        return TriggerResponse(True, "")
+
+
+if __name__ == "__main__":
+    args, _ = parse_rosnode_args()
+    navrep_node = NavrepNode(args)

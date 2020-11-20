@@ -1,0 +1,64 @@
+<launch>
+  <arg name="mapname" default="asl_office_j" />
+  <arg name="mapfolder" default="$(env HOME)/maps"/>
+  <arg name="ia_downsampling_passes" default="1"/>
+  <arg name="localization" default="false"/>  <!-- if disabled uses g.t. loc from sim -->
+  <arg name="scenario" default="irosasl_office_j4"/>
+
+  <!-- sim -->
+  <include file="$(find ia_ros)/launch/ros_sim_node.launch">
+    <arg name="rviz" value="false" />
+    <arg name="output" value="screen" />
+    <arg name="mapname" value="$(arg mapname)" />
+    <arg name="mapfolder" value="$(arg mapfolder)" />
+    <arg name="script_args" 
+      value="--cmd_vel --delay-start --map-downsampling-passes $(arg ia_downsampling_passes) --realtime --scenario $(arg scenario) --plan-async --naive-plan --dt 0.05" />
+  </include>
+
+  <!-- Gmapping & Map Matching -->
+  <include file="$(find asl_pepper_gmapping)/launch/gmapping.launch" >
+    <arg name="output" value="log"/>
+  </include>
+  <include file="$(find map_matcher)/launch/map_matcher.launch" if="$(arg localization)">
+    <arg name="output" value="log" />
+    <arg name="slam_map_topic" value="/gmap"/>
+    <arg name="reference_map_name" value="$(arg mapname)"/>
+    <arg name="reference_map_downsampling_passes" value="$(arg ia_downsampling_passes)"/>
+    <arg name="maps_folder" value="$(arg mapfolder)"/>
+    <arg name="launch_prefix" value="nice -n 20" />
+  </include>
+  <!-- Otherwise just publish reference map -->
+  <node pkg="map_server" type="map_server" name="ref_map_server"
+    args="$(arg mapfolder)/$(arg mapname).yaml" if="$(eval arg('localization') != true)">
+    <param name="frame_id" value="reference_map" />
+    <remap from="/map" to="/reference_map"/>
+  </node>
+  <node pkg="tf"
+      type="static_transform_publisher"
+      name="simmap_to_refmap_tf_pub"
+      args="0 0 0 0 0 0 reference_map sim_map 100" if="$(eval arg('localization') != true)"/>
+
+  <!-- Global Path Planning -->
+  <node pkg="asl_pepper_motion_planning" type="global_planner"
+    name="global_planner" args="--hz" output="log" >
+    <param name="reference_map_name" value="$(arg mapname)"/>
+    <param name="reference_map_folder" value="$(arg mapfolder)"/>
+    <param name="reference_map_downsampling_passes" value="$(arg ia_downsampling_passes)" />
+<!--     <param name="reference_map_name" value="/gmap"/> -->
+<!--     <param name="reference_map_folder" value="rostopic"/> -->
+<!--     <param name="reference_map_frame" value="gmap"/> -->
+  </node>
+
+<!--   NavRep Planner -->
+<!--   _________________________________________________- -->
+
+  <node pkg="ros_run_command" type="ros_run_command" name="navrep_node" output="screen"
+    args="python ~/Code/navigation_representations/navrep/scripts/ros_run_navrep --no-stop"
+  />
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log"
+    args="-d $(find asl_pepper_gmapping)/../rviz/iros_navrep.rviz"
+  />
+
+
+</launch> 

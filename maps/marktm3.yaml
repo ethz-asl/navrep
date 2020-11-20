@@ -1,0 +1,9 @@
+image: marktm3.pgm
+resolution: 0.0170000
+origin: [-8.5, -6.5, 0.000000]
+# resolution: 0.01
+# origin: [-5., -5., 0.]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.15 #0.196
+

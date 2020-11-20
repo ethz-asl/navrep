@@ -1,0 +1,7 @@
+image: empty.pgm
+resolution: 0.0100000
+origin: [-5.480000, -5.480000, 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.15 #0.196
+

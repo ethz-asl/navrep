@@ -1,0 +1,9 @@
+image: marktrain.pgm
+resolution: 0.0170000
+origin: [-3.5, -8.5, 0.000000]
+# resolution: 0.0100000
+# origin: [-2., -5., 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.15 #0.196
+

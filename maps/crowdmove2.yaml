@@ -1,0 +1,7 @@
+image: crowdmove2.pgm
+resolution: 0.04000
+origin: [-12.8, -12.8, 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.15 #0.196
+
