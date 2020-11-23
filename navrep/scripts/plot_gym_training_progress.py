@@ -407,7 +407,10 @@ def get_label(envname, backend, encoding):
     if envname in envname_labels:
         label = envname_labels[envname]
     else:
-        label = "{}, {}".format(backend_labels[backend], encoding_labels[encoding])
+        try:
+            label = "{}, {}".format(backend_labels[backend], encoding_labels[encoding])
+        except KeyError:
+            label = "{}, {}, {}".format(envname, backend, encoding)
     return label
 
 def get_date(logpath):

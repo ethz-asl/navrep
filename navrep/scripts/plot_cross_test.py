@@ -21,20 +21,19 @@ backend_ranks = {
     "VAELSTM": 4,
     "GPT1D": 2,
     "GPT": 5,
-    None: None,
+    None: 0,
 }
 envname_ranks = {
     "e2e1dnavreptrain": 0,
     "e2enavreptrain": 1,
     "lucianavreptrain": 2,
     "navreptrainencodedenv": 3,
-    None: None,
 }
 encoding_ranks = {
     "V_ONLY": 0,
     "M_ONLY": 1,
     "VM": 2,
-    None: None,
+    None: 0,
 }
 def sort_by_env_backend_encoding_date(logs):
     sortkeys = {}
@@ -42,7 +41,11 @@ def sort_by_env_backend_encoding_date(logs):
         backend, encoding = get_backend_and_encoding(log)
         envname = get_envname(log)
         date = get_date(log)
-        sortkeys[log] = (envname_ranks[envname], backend_ranks[backend], encoding_ranks[encoding], date)
+        try:
+            sortkeys[log] = (envname_ranks[envname], backend_ranks[backend], encoding_ranks[encoding], date)
+        except KeyError as e:
+            print(e)
+            sortkeys[log] = (0, 0, 0, '')
 
     sorted_logs = sorted(logs, key=lambda x:sortkeys[x])
     return sorted_logs

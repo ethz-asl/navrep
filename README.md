@@ -1,5 +1,7 @@
 # NavRep
 
+**New 24/11/20: we compared the Guldenring et al. pretrained models (IROS 2020), see [here](wiki/testing_your_models_in_navrep.md).**
+
 ![varch](media/varch.gif)
 
 This repository contains two main modules:
@@ -137,7 +139,8 @@ roslaunch launch/sim_and_navrep.launch
 
 ## Using NavRep with your own models / environments
 
-### Testing your model in the NavRep test environment
+- [Testing your model in the NavRep test environment](wiki/testing_your_models_in_navrep.md)
+
 
 ## Pre-trained NavRep models
 

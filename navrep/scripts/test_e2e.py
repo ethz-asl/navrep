@@ -4,7 +4,7 @@ from stable_baselines import PPO2
 from navrep.tools.custom_policy import CustomPolicy, Custom1DPolicy
 
 class E2ECPolicy(object):
-    """ wrapper for gym policies """
+    """ thin wrapper for gym policies """
     def __init__(self, model_path=None, model=None):
         if model is not None:
             self.model = model
@@ -21,7 +21,7 @@ class E2ECPolicy(object):
         return action
 
 class E2E1DCPolicy(object):
-    """ wrapper for gym policies """
+    """ thin wrapper for gym policies """
     def __init__(self, model_path=None, model=None):
         if model is not None:
             self.model = model

@@ -168,20 +168,3 @@ if __name__ == '__main__':
         PATH = os.path.join(DIR, NAME)
         S.to_csv(PATH)
     print("{} written.".format(PATH))
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

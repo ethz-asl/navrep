@@ -13,6 +13,16 @@ PUNISH_SPIN = True
 
 class IANEnv(gym.Env):
     """ This class wraps the IARLenv to make a RL ready simplified environment
+
+        Action space:
+            (x velocity, y velocity, theta velocity), all in [m/s]
+        Observation space:
+            (scan, robotstate)
+            scan:
+                360 degree lidar scan, 1080 rays,
+                with min angle of 0 (straight forwards), max angle of 2pi. [m]
+            robotstate:
+                (gx [m], gy [m], vx [m/s], vy [m/s], vth [rad/s]) - all in robot frame
     """
     metadata = {'render.modes': ['human']}
 
@@ -53,7 +63,7 @@ class IANEnv(gym.Env):
         self.current_episode_goal = None
         self.total_steps = 0
         # environment state variables
-        self.reset()
+#         self.reset()
 
     def step(self, action):
         self.steps_since_reset += 1
