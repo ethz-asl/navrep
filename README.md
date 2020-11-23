@@ -84,7 +84,7 @@ Press `w, a, s, d` to move around, `shift` to speed up the simulation.
 ## Reproducing NavRep
 
 The following is an example of how to reproduce the results in the NavRep paper.
-It is a subset of the full procedure, which can be found in the [worflow_navrep](navrep/scripts/workflow_navrep.sh) file.
+It is a subset of the full procedure, which can be found in the [workflow_navrep.sh](navrep/scripts/workflow_navrep.sh) file.
 
 ### make a V dataset
 
