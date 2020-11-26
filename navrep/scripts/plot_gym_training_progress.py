@@ -335,6 +335,7 @@ envname_colors = {
     "e2e1dnavreptrain": "lightgrey",
     "e2enavreptrain": "grey",
     "lucianavreptrain": "red",
+    "guldenring": "plum",
 }
 encoding_styles = {
     "V_ONLY": "dotted",
@@ -346,6 +347,7 @@ envname_labels = {
     "e2e1dnavreptrain": "End-to-end (1D)",
     "e2enavreptrain": "End-to-end",
     "lucianavreptrain": "SOADRL",
+    "guldenring": "Guldenring et al.",
 }
 backend_labels = {
     "VAE1D_LSTM": "Modular (1D)",

@@ -317,7 +317,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     for key, o in zip(species_success_rates, offsets):
         envname, backend, encoding = key
-        label = "{} {} {}".format(envname or "", backend or "", encoding or "")
+        label = get_label(envname, backend, encoding)
         specie_success_rates = species_success_rates[key]
         ymin = np.array([np.min(specie_success_rates[group]) for group in map_groups])
         ymax = np.array([np.max(specie_success_rates[group]) for group in map_groups])
