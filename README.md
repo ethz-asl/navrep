@@ -1,6 +1,8 @@
-# NavRep
 
-**New 24/11/20: we compared the Guldenring et al. pretrained models (IROS 2020), see [here](wiki/testing_your_models_in_navrep.md).**
+| <img src="wiki/media/guldenring_test.png" width="400"/> <br> **New 24/11/20: we compared the Guldenring et al. pretrained models (IROS 2020), see [here](wiki/testing_your_models_in_navrep.md).** |
+| ------------------------ |
+
+# NavRep
 
 ![varch](media/varch.gif)
 
