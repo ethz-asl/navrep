@@ -28,9 +28,10 @@ class MarkEnv(gym.Env):
         # gym env definition
         super(MarkEnv, self).__init__()
         self.action_space = spaces.Box(low=-1, high=1, shape=(3,), dtype=np.float32)
-        # actually obs space is Tuple(Box(1080), Box(5)) but no support from sb
-        self.observation_space = spaces.Box(low=0, high=np.inf,
-                                            shape=(1080,), dtype=np.float32)
+        self.observation_space = spaces.Tuple((
+            spaces.Box(low=0, high=np.inf, shape=(1080,), dtype=np.float32),
+            spaces.Box(low=0, high=np.inf, shape=(5,), dtype=np.float32),
+        ))
         # constants
         self.COLLECT_TRAJECTORIES = collect_trajectories
         self.DT = 0.5  # should be the same as data rnn was trained with
@@ -147,3 +148,10 @@ class MarkEnv(gym.Env):
 
     def _get_dt(self):
         return self.rlenv.DT
+
+
+if __name__ == "__main__":
+    from navrep.tools.envplayer import EnvPlayer
+
+    env = MarkEnv()
+    player = EnvPlayer(env)

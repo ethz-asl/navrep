@@ -13,7 +13,7 @@ from navrep.envs.scenario_list import map_downsampling
 
 PUNISH_SPIN = False
 
-# TODO: this is still a work in progress. Make it into a VecEnv
+# TODO: this is still a work in progress. @Daniel: Make it into a VecEnv
 # from stable_baselines import DummyVecEnv
 
 CROWDMOVE_MAPS = ["crowdmove1", "crowdmove2", "crowdmove3", "crowdmove4", "crowdmove5", "crowdmove6"]

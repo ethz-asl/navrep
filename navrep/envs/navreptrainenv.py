@@ -61,8 +61,10 @@ class NavRepTrainEnv(gym.Env):
         # gym env definition
         super(NavRepTrainEnv, self).__init__()
         self.action_space = spaces.Box(low=-1, high=1, shape=(3,), dtype=np.float32)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf,
-                                            shape=(1080,), dtype=np.float32)
+        self.observation_space = spaces.Tuple((
+            spaces.Box(low=-np.inf, high=np.inf, shape=(1080,), dtype=np.float32),
+            spaces.Box(low=-np.inf, high=np.inf, shape=(5,), dtype=np.float32)
+        ))
         # parameters
         self.lidar_legs = lidar_legs
         self.silent = silent

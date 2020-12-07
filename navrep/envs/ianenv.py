@@ -30,8 +30,10 @@ class IANEnv(gym.Env):
         # gym env definition
         super(IANEnv, self).__init__()
         self.action_space = spaces.Box(low=-1, high=1, shape=(3,), dtype=np.float32)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf,
-                                            shape=(1080,), dtype=np.float32)
+        self.observation_space = spaces.Tuple((
+            spaces.Box(low=-np.inf, high=np.inf, shape=(1080,), dtype=np.float32),
+            spaces.Box(low=-np.inf, high=np.inf, shape=(5,), dtype=np.float32),
+        ))
         # parameters
         self.silent = silent
         self.max_episode_length = max_episode_length
@@ -160,3 +162,10 @@ class IANEnv(gym.Env):
 
     def _get_dt(self):
         return self.iarlenv.args.dt
+
+
+if __name__ == "__main__":
+    from navrep.tools.envplayer import EnvPlayer
+
+    env = IANEnv()
+    player = EnvPlayer(env)

@@ -10,8 +10,10 @@ class ToyEnv(gym.Env):
         super(ToyEnv, self).__init__()
         self.action_space = spaces.Box(low=-1, high=1, shape=(3,), dtype=np.float32)
         # actually obs space is Tuple(Box(1080), Box(5)) but no support from sb
-        self.observation_space = spaces.Box(low=0, high=np.inf,
-                                            shape=(1080,), dtype=np.float32)
+        self.observation_space = spaces.Tuple((
+            spaces.Box(low=0, high=np.inf, shape=(1080,), dtype=np.float32),
+            spaces.Box(low=0, high=np.inf, shape=(5,), dtype=np.float32),
+        ))
         # args
         args = parse_iaenv_args()
         args.unmerged_scans = False
@@ -44,3 +46,17 @@ class ToyEnv(gym.Env):
 
     def close(self):
         self.iarlenv.close()
+
+    def _get_dt(self):
+        return self.iarlenv.args.dt
+
+    def _get_viewer(self):
+        viewer = self.iarlenv._get_viewer()
+        return viewer
+
+
+if __name__ == "__main__":
+    from navrep.tools.envplayer import EnvPlayer
+
+    env = ToyEnv()
+    player = EnvPlayer(env)

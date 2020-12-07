@@ -59,14 +59,17 @@ class EnvPlayer(object):
             pass
 
     def reset(self):
+        # reset env
+        print("Resetting")
+        self.env.reset()
+        # reset player
         self.realtime_rate = WalltimeRate(1.0 / self.env._get_dt())
         self.action = np.array([0.0, 0.0, 0.0])
         self.restart = False
         self.exit = False
         self.action_key_is_set = False
-        print("Resetting")
-        self.env.reset()
         self.restart = False
+        # reset viewer, connect callbacks
         self.env.render(mode=self.render_mode)
         self.env._get_viewer().window.on_key_press = self.key_press
         self.env._get_viewer().window.on_key_release = self.key_release
@@ -74,6 +77,13 @@ class EnvPlayer(object):
     def run(self):
         # run interactively ----------------------
         self.reset()
+
+        print()
+        print("-------------------")
+        print("Running environment")
+        print("press WASD to move, Q and E to rotate, shift to speed-up.")
+        print("R to reset, ESC to exit.")
+        print("...")
 
         i = 0
         while not self.exit:

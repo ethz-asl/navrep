@@ -19,8 +19,10 @@ class ArchiveEnv(gym.Env):
         # gym env definition
         super(ArchiveEnv, self).__init__()
         self.action_space = spaces.Box(low=-1, high=1, shape=(3,), dtype=np.float32)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf,
-                                            shape=(1080,), dtype=np.float32)
+        self.observation_space = spaces.Tuple((
+            spaces.Box(low=-np.inf, high=np.inf, shape=(1080,), dtype=np.float32),
+            spaces.Box(low=-np.inf, high=np.inf, shape=(5,), dtype=np.float32),
+        ))
         self.data = WorldModelDataset._load_data(None, directory, file_limit=file_limit)
         if len(self.data["scans"]) == 0:
             raise ValueError
