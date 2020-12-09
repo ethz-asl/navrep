@@ -3,12 +3,15 @@
 | ------------------------ |
 
 # NavRep
-
 ![varch](media/varch.gif)
 
-This repository contains two main modules:
-- NavRepSim, a simulator aimed at allowing anyone to easy reproduce and improve on the state-of-the-art of RL for robot navigation.
-- NavRep, a suite for unsupervised-learning-assisted RL for robot navigation. It contains tools, datasets, models which allow you to easily reproduce findings from our paper.
+This is the official repository for the NavRep [paper](https://arxiv.org/pdf/2012.04406.pdf). it contains:
+- a simulator aimed at allowing anyone to easy reproduce and improve on the state-of-the-art of RL for robot navigation.
+- a suite for unsupervised-learning-assisted RL for robot navigation. It contains tools, datasets, models which allow you to easily reproduce findings from our paper.
+
+### Publication
+
+Daniel Dugas, Juan Nieto, Roland Siegwart and Jen Jen Chung, **NavRep: Unsupervised Representations for Reinforcement Learning of Robot Navigation in Dynamic Human Environments**, *Pending review, 2020* - [pdf](https://arxiv.org/pdf/2012.04406.pdf)
 
 ## Pre-requisites
 Python 3.6
