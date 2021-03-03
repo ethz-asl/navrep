@@ -57,12 +57,19 @@ class NavrepEvalCallback(BaseCallback):
     """
     A custom callback that derives from ``BaseCallback``.
 
+    :param eval_env: (gym.Env) environment with which to evaluate the model (at eval_freq)
+    :param test_env_fn: (function) function which returns an environment which is used to evaluate
+                        the model after every tenth evaluation.
+    :param n_eval_episodes: (int) how many episodes to run the evaluation env for
     :param logpath: (string) where to save the training log
+    :param savepath: (string) where to save the model
+    :param eval_freq: (int) how often to run the evaluation
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
-    :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
+    :param render: (bool) human rendering in the test env
     """
     def __init__(self, eval_env, test_env_fn=None,
-                 n_eval_episodes=20, logpath=None, savepath=None, eval_freq=10000, verbose=0):
+                 n_eval_episodes=20, logpath=None, savepath=None, eval_freq=10000, verbose=0,
+                 render=False):
         super(NavrepEvalCallback, self).__init__(verbose)
         # self.model = None  # type: BaseRLModel
         # self.training_env = None  # type: Union[gym.Env, VecEnv, None]
@@ -74,6 +81,7 @@ class NavrepEvalCallback(BaseCallback):
         self.eval_env = eval_env
         self.test_env_fn = test_env_fn
         self.last_eval_time = time.time()
+        self.render = render
 
     def _on_step(self) -> bool:
         """
@@ -88,11 +96,14 @@ class NavrepEvalCallback(BaseCallback):
             eval_duration = toc - tic
 
             new_avg_reward = -np.inf
+            # every 10 evaluations, do a more thorough test
             if self.n_calls % (self.eval_freq * 10) == 0 or self.n_calls == 1:
                 if self.test_env_fn is not None:
                     policy = NavRepCPolicy(model=self.model)
                     test_env = self.test_env_fn()
-                    success_rate, avg_nav_time = run_test_episodes(test_env, policy, num_episodes=100)
+                    success_rate, avg_nav_time = run_test_episodes(test_env, policy,
+                                                                   num_episodes=100, render=self.render)
+                    # we add a first point to the history log, for nice plotting
                     S.loc[len(S)] = [
                         self.eval_env.total_steps,
                         'navrepval',

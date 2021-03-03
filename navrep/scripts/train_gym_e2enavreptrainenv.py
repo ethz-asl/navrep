@@ -43,7 +43,7 @@ if __name__ == "__main__":
     def test_env_fn():  # noqa
         return E2ENavRepEnv(silent=True, scenario='test')
     cb = NavrepEvalCallback(eval_env, test_env_fn=test_env_fn,
-                            logpath=LOGPATH, savepath=MODELPATH, verbose=1)
+                            logpath=LOGPATH, savepath=MODELPATH, verbose=1, render=args.render)
     model = PPO2(CustomPolicy, env, verbose=0)
     model.learn(total_timesteps=TRAIN_STEPS+1, callback=cb)
     obs = env.reset()
