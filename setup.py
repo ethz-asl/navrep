@@ -7,7 +7,7 @@ setup(
     name="navrep",
     description='navigation representations',
     author='Daniel Dugas',
-    version='0.0.9',
+    version='0.0.10',
     # doesn't work with pip install -e
     package_dir={'frame_msgs': "external/frame_msgs", 'tf_bag': "external/tf_bag"},
     packages=["navrep",
