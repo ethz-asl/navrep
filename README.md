@@ -149,6 +149,8 @@ roslaunch launch/sim_and_navrep.launch
 
 ## Pre-trained NavRep models
 
+![models](media/arch_overview2.png)
+
 all models shown in the paper are available [here](models).
 
 Copy the models from the V, M (modular archs) W (joint and transformer archs) and gym (C module) folders to your home directory according to the following structure:
