@@ -166,10 +166,11 @@ class NavRepTrainEnv(gym.Env):
         y_goals = [a.gy for a in all_agents]
         x_vertices = list(all_vertices[:,0])
         y_vertices = list(all_vertices[:,1])
-        x_min = min(x_agents + x_goals + x_vertices) - 1.
-        x_max = max(x_agents + x_goals + x_vertices) + 1.
-        y_min = min(y_agents + y_goals + y_vertices) - 1.
-        y_max = max(y_agents + y_goals + y_vertices) + 1.
+        BORDER_OFFSET = 1.
+        x_min = min(x_agents + x_goals + x_vertices) - BORDER_OFFSET
+        x_max = max(x_agents + x_goals + x_vertices) + BORDER_OFFSET
+        y_min = min(y_agents + y_goals + y_vertices) - BORDER_OFFSET
+        y_max = max(y_agents + y_goals + y_vertices) + BORDER_OFFSET
         # anticlockwise -> bounding obstacle
         border_vertices = [(x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)][::-1]
         self.border = [(x_min, x_max), (y_min, y_max)]
