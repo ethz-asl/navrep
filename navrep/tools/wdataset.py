@@ -15,8 +15,8 @@ _G = 2
 LIDAR_NORM_FACTOR = 25.  # maximum typical lidar distance, meters
 
 def scans_to_lidar_obs(scans, lidar_mode, rings_def, channel_first):
-    N, L = scans.shape
     if lidar_mode == "rings":
+        N, L = scans.shape
         obs = (
             rings_def["lidar_to_rings"](scans).astype(float)
             / rings_def["rings_to_bool"]
@@ -26,10 +26,13 @@ def scans_to_lidar_obs(scans, lidar_mode, rings_def, channel_first):
         if channel_first:
             obs = np.moveaxis(obs, -1, 1)
     elif lidar_mode == "scans":
+        N, L = scans.shape
         obs = scans / LIDAR_NORM_FACTOR
         obs = obs.reshape(N, L, _CH)  # add single channel
         if channel_first:
             obs = np.moveaxis(obs, -1, 1)
+    elif lidar_mode == "raw_obs":
+        obs = scans
     else:
         raise NotImplementedError
     return obs
