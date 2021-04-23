@@ -34,6 +34,7 @@ class GPTConfig:
     n_head = 8
     n_action = _A  # forward v, side v, rot v
     n_states = _G  # goal_x, goal_y (in robot frame)
+    image_channels = 1
 
     def __init__(self, block_size, n_embd):
         self.block_size = block_size
@@ -117,7 +118,7 @@ class GPT(nn.Module):
         super().__init__()
 
         # input embedding stem
-        self.convVAE = VAE(z_dim=config.n_embd, gpu=gpu)
+        self.convVAE = VAE(z_dim=config.n_embd, gpu=gpu, image_channels=config.image_channels)
         self.action_emb = nn.Linear(config.n_action, config.n_embd)
         self.pos_emb = nn.Parameter(torch.zeros(1, config.block_size, config.n_embd))
         self.state_emb = nn.Linear(config.n_states, config.n_embd)

@@ -1,4 +1,5 @@
 from pyniel.python_tools.path_tools import make_dir_if_not_exists
+import time
 import numpy as np
 import os
 from crowd_sim.envs.policy.orca import ORCA
@@ -9,10 +10,76 @@ from navrep.tools.data_extraction import folder_to_archive
 from navrep.envs.toyenv import ToyEnv
 from navrep.envs.markenv import MarkEnv, FIRST_TRAIN_MAPS, SECOND_TRAIN_MAPS
 from navrep.envs.navreptrainenv import NavRepTrainEnv
+from navrep.tools.envplayer import EnvPlayer, WalltimeRate
 
 class Suicide(object):
     def __init__(self):
         pass
+
+class HumanControlPolicy(EnvPlayer):
+    """ allows a human to provide the expert policy for dataset generation
+    reuses the keyboard control functions from EnvPlayer """
+    def __init__(self):
+        self.render_mode = "human"
+        self.STEP_BY_STEP = False
+        self.reset()
+
+    def reset(self):
+        # variables
+        self.action = np.array([0.0, 0.0, 0.0])
+        self.restart = False
+        self.exit = False
+        self.action_key_is_set = False
+        self.restart = False
+        self.boost = False
+        self.viewer = None
+        self.realtime_rate = None
+
+    def predict(self, obs, env):
+        env.render(mode=self.render_mode)
+        if self.viewer is None:
+            self.viewer = env._get_viewer()
+            self.viewer.window.on_key_press = self.key_press
+            self.viewer.window.on_key_release = self.key_release
+            self.realtime_rate = WalltimeRate(1.0 / env._get_dt())
+        # synchronize (either with keypresses or walltime)
+        if self.STEP_BY_STEP:
+            # wait for keypress
+            while True:
+                if self.boost:
+                    break
+                if not self.action_key_is_set:
+                    env.render(mode=self.render_mode)
+                    time.sleep(0.01)
+                else:
+                    self.action_key_is_set = False
+                    break
+        else:
+            if not self.boost:
+                self.realtime_rate.sleep()
+        return self.action
+
+class SemiRandomMomentumPolicy(object):
+    def __init__(self):
+        self.speed = None
+
+    def reset(self):
+        self.speed = np.zeros((3,))
+
+    def predict(self, obs, env):
+        # simple heuristic - accelerate and face goal
+        robotstate = obs[1]
+        goal_xy = robotstate[:2]
+        goal_dist = np.linalg.norm(goal_xy)
+        best_xy = goal_xy / goal_dist if goal_dist != 0 else np.zeros_like(goal_xy)
+        angle_to_goal = np.arctan2(goal_xy[1], goal_xy[0])
+        best_rot = angle_to_goal * 0.1
+        best_acc = np.array([best_xy[0], best_xy[1], best_rot])
+        stddev = np.array([0.3, 0.3, 0.3])
+        acceleration = np.random.normal(best_acc, stddev)
+        friction = -self.speed * np.array([0.01, 0.01, 0.1])
+        self.speed = np.clip(self.speed + acceleration + friction, -0.5, 0.5)
+        return self.speed * 1.
 
 class RandomMomentumPolicy(object):
     def __init__(self):
