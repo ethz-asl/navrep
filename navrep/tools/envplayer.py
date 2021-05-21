@@ -1,5 +1,4 @@
 import numpy as np
-from pyglet.window import key
 from pyniel.python_tools.timetools import WalltimeRate
 import time
 
@@ -18,6 +17,7 @@ class EnvPlayer(object):
         self.run()
 
     def key_press(self, k, mod):
+        from pyglet.window import key
         if k == 0xFF0D or k == key.ESCAPE:
             self.exit = True
         if k == key.R:
@@ -41,6 +41,7 @@ class EnvPlayer(object):
         self.action_key_is_set = True
 
     def key_release(self, k, mod):  # reverse action of pressed
+        from pyglet.window import key
         if k in [key.RIGHT, key.E] and self.action[2] == -ROT_SPEED:
             self.action[2] = 0
         if k in [key.LEFT, key.Q] and self.action[2] == +ROT_SPEED:

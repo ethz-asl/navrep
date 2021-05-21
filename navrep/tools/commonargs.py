@@ -28,6 +28,7 @@ def populate_plotting_args(parser):
     parser.add_argument('--scenario', type=str)
     parser.add_argument('--logdir', type=str)
     parser.add_argument('--x-axis', type=str)
+    parser.add_argument('--y-axis', type=str)
 
 def populate_rosnode_args(parser):
     parser.add_argument('--no-stop', action='store_true', help="give planner immediate control")
