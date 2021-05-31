@@ -113,7 +113,7 @@ def generate_rings(
         return scans
 
     def visualize_rings(
-        ring, scan=None, angle_min=0, angle_max=2 * np.pi, fig=None, ax=None
+        ring, scan=None, angle_min=0, angle_max=2 * np.pi, fig=None, ax=None, plot_regen=False
     ):
         CHANNEL = 0
         th = np.linspace(angle_min, angle_max, angle_levels)
@@ -129,7 +129,8 @@ def generate_rings(
             scan_regen = rings_to_lidar(ring[None, :, :, :], scan.shape[0])[0, :]
             scan_th = np.linspace(angle_min, angle_max, scan.shape[0])
             plt.plot(scan_th, scan, "r")
-            plt.plot(scan_th, scan_regen, "g")
+            if plot_regen:
+                plt.plot(scan_th, scan_regen, "g")
         return ax
 
     return {
@@ -177,7 +178,7 @@ def generate_downsampling_map(I, J):
 if __name__ == "__main__":
     ring_def = generate_rings()
     # linear ramp
-    scans = np.ones((1, 1080)) * (np.arange(1080) / 1080.0 * 50.0)[None, :]
-    rings = ring_def["lidar_to_rings"](scans)
+    scans = np.ones((1, 1080)) * (np.arange(1080) / 1080.0 * 25.0)[None, :]
+    rings = ring_def["lidar_to_rings"](scans.astype(np.float32))
     plt.ion()
     ring_def["visualize_rings"](rings[0, :, :, :], scan=scans[0])
