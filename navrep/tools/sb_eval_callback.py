@@ -69,7 +69,7 @@ class NavrepEvalCallback(BaseCallback):
     """
     def __init__(self, eval_env, test_env_fn=None,
                  n_eval_episodes=20, logpath=None, savepath=None, eval_freq=10000, verbose=0,
-                 render=False):
+                 n_envs=None, render=False):
         super(NavrepEvalCallback, self).__init__(verbose)
         # self.model = None  # type: BaseRLModel
         # self.training_env = None  # type: Union[gym.Env, VecEnv, None]
@@ -82,6 +82,7 @@ class NavrepEvalCallback(BaseCallback):
         self.test_env_fn = test_env_fn
         self.last_eval_time = time.time()
         self.render = render
+        self.n_envs = n_envs # some policies require to be tested with same n_envs as training
 
     def _on_step(self) -> bool:
         """
@@ -91,7 +92,7 @@ class NavrepEvalCallback(BaseCallback):
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0 or self.n_calls == 1:
             # get episode_statistics
             tic = time.time()
-            S = run_k_episodes(self.model, self.eval_env, 20)
+            S = run_k_episodes(self.model, self.eval_env, 20, n_envs=self.n_envs)
             toc = time.time()
             eval_duration = toc - tic
 
@@ -102,7 +103,8 @@ class NavrepEvalCallback(BaseCallback):
                     policy = NavRepCPolicy(model=self.model)
                     test_env = self.test_env_fn()
                     success_rate, avg_nav_time = run_test_episodes(test_env, policy,
-                                                                   num_episodes=100, render=self.render)
+                                                                   num_episodes=100, render=self.render,
+                                                                   n_envs=self.n_envs)
                     # we add a first point to the history log, for nice plotting
                     S.loc[len(S)] = [
                         self.eval_env.total_steps,
@@ -162,11 +164,17 @@ def save_model_if_improved(new_avg_reward, best_avg_reward, model, savepath):
             except:  # noqa
                 print("Could not save")
 
-def run_k_episodes(model, env, k):
+def run_k_episodes(model, env, k, n_envs=None):
     for i in range(k):
         obs = env.reset()
+        if n_envs is not None:
+            obs = obs[None,:] * np.ones((n_envs,))[:,None] # hack for MlpLstmPolicy
         done = False
         while not done:
             action, _ = model.predict(obs, deterministic=True)
+            if n_envs is not None:
+                action = action[0] # hack for MlpLstmPolicy
             obs, _, done, _ = env.step(action)
+            if n_envs is not None:
+                obs = obs[None,:] * np.ones((n_envs,))[:,None] # hack for MlpLstmPolicy
     return env.episode_statistics

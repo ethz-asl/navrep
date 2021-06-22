@@ -23,7 +23,7 @@ class NavRepCPolicy(object):
         return action
 
 
-def run_test_episodes(env, policy, render=False, print_failure=True, num_episodes=500):
+def run_test_episodes(env, policy, render=False, print_failure=True, num_episodes=500, n_envs=None):
     success_times = []
     collision_times = []
     collision_other_agent_times = []
@@ -41,12 +41,18 @@ def run_test_episodes(env, policy, render=False, print_failure=True, num_episode
     progress_bar = tqdm(range(num_episodes), total=num_episodes)
     for i in progress_bar:
         progress_bar.set_description("Case {}".format(i))
-        ob = env.reset()
+        obs = env.reset()
+        if n_envs is not None:
+            obs = obs[None,:] * np.ones((n_envs,))[:,None] # hack for MlpLstmPolicy
         done = False
         env_time = 0
         while not done:
-            action = policy.act(ob)
-            ob, _, done, info = env.step(action)
+            action = policy.act(obs)
+            if n_envs is not None:
+                action = action[0] # hack for MlpLstmPolicy
+            obs, _, done, info = env.step(action)
+            if n_envs is not None:
+                obs = obs[None,:] * np.ones((n_envs,))[:,None] # hack for MlpLstmPolicy
             event = info['event']
             if render:
                 env.render('human')  # robocentric=True, save_to_file=True)
