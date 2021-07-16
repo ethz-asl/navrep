@@ -296,6 +296,43 @@ class GPT(nn.Module):
         h = h[0, -1]  # only batch, last item in sequence
         return h
 
+    def get_next(self, gpt_sequence):
+        """ for compat with encodedenv
+        gpt sequence is a list of dicts, one for each step in the sequence.
+        each dict has
+        "obs": numpy image (W, H, CH) [0, 1]
+        "state": numpy (2,) [-inf, inf]
+        "action": numpy (3,) [-inf, inf]
+        output:
+        img_pred: (W, H, CH)
+        state_pred: (2,)
+        """
+        _b = 1  # batch size
+        img = np.array([d["obs"] for d in gpt_sequence])  # t, W, H, CH
+        img = np.moveaxis(img, -1, 1)
+        img = img.reshape((_b, *img.shape))
+        img_t = torch.tensor(img, dtype=torch.float)
+        img_t = self._to_correct_device(img_t)
+        state = np.array([d["state"] for d in gpt_sequence])  # t, 2
+        state = state.reshape((_b, *state.shape))
+        state_t = torch.tensor(state, dtype=torch.float)
+        state_t = self._to_correct_device(state_t)
+        action = np.array([d["action"] for d in gpt_sequence])  # t, 3
+        action = action.reshape((_b, *action.shape))
+        action_t = torch.tensor(action, dtype=torch.float)
+        action_t = self._to_correct_device(action_t)
+        dones = np.zeros((_b, len(gpt_sequence), 1))
+        dones_t = torch.tensor(dones, dtype=torch.float)
+        dones_t = self._to_correct_device(dones_t)
+        h_container = [None]
+        img_pred_t, state_pred_t, _ = self.forward(img_t, state_t, action_t, dones_t, h=h_container)
+        img_pred = img_pred_t.detach().cpu().numpy()
+        img_pred = img_pred[0, -1]  # only batch, last item in sequence
+        img_pred = np.moveaxis(img_pred, 0, -1)
+        state_pred = state_pred_t.detach().cpu().numpy()
+        state_pred = state_pred[0, -1]  # only batch, last item in sequence
+        return img_pred, state_pred
+
 def save_checkpoint(model, ckpt_path):
     if ckpt_path is not None:
         ckpt_model = model.module if hasattr(model, "module") else model
