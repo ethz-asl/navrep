@@ -58,7 +58,7 @@ if __name__ == "__main__":
                                      silent=True, scenario='test', gpu=not args.no_gpu)
     cb = NavrepEvalCallback(eval_env, test_env_fn=test_env_fn,
                             logpath=LOGPATH, savepath=MODELPATH, verbose=1)
-    model = PPO2(MlpPolicy, env, verbose=0)
+    model = PPO2('MlpLstmPolicy', env, verbose=0, nminibatches=N_ENVS)
     model.learn(total_timesteps=TRAIN_STEPS+1, callback=cb)
     obs = env.reset()
 
