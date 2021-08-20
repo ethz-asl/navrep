@@ -46,6 +46,20 @@ class WorldModelDataset(Dataset):
                  lidar_mode="rings",
                  pre_convert_obs=False,
                  regen=None):
+        """
+        Loads data files into a pytorch-compatible dataset
+
+        arguments
+        ------
+        directory: a path or list of paths in which to look for data files
+        sequence_size: the desired length of RNN sequences
+        channel_first: if True, outputs samples in (Sequence, Channel, Width, Height) shape,
+                        else (Sequence, Width, Height, Channel)
+        as_torch_tensors: outputs data samples as torch tensors for convenience
+        lidar_mode: "rings", "scans" or "images". Determines how to interpret the sensor data
+        pre_convert_obs: converts observation at load time, instead of at sample time
+        regen: "navreptrain" or None, in the first case the dataset will be partially replaced with new data
+        """
         self.pre_convert_obs = pre_convert_obs
         self.regen = regen
         self.regen_prob = 0.1
@@ -61,16 +75,23 @@ class WorldModelDataset(Dataset):
         print("data has %d steps." % (len(self.data["scans"])))
 
     def _load_data(self, directory, file_limit=None):
-        directory = os.path.expanduser(directory)
-        # list files
+        # list all data files
         files = []
-        for dirpath, dirnames, filenames in os.walk(directory):
-            for filename in [
-                f
-                for f in filenames
-                if f.endswith("scans_robotstates_actions_rewards_dones.npz")
-            ]:
-                files.append(os.path.join(dirpath, filename))
+        if isinstance(directory, list):
+            directories = directory
+        elif isinstance(directory, str):
+            directories = [directory]
+        else:
+            raise NotImplementedError
+        for dir_ in directories:
+            dir_ = os.path.expanduser(dir_)
+            for dirpath, dirnames, filenames in os.walk(dir_):
+                for filename in [
+                    f
+                    for f in filenames
+                    if f.endswith("scans_robotstates_actions_rewards_dones.npz")
+                ]:
+                    files.append(os.path.join(dirpath, filename))
         if file_limit is None:
             file_limit = len(files)
         data = {
