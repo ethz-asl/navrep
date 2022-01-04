@@ -120,6 +120,8 @@ class WorldModelDataset(Dataset):
         return math.ceil(len(self.data["scans"]) / (self.sequence_size + 1))
 
     def __getitem__(self, idx):
+        if idx >= self.__len__():
+            raise IndexError("Index out of bounds")
         if self.regen is not None and idx == len(self)//2:
             if np.random.random() < self.regen_prob:
                 print("PARTIAL REGEN")
