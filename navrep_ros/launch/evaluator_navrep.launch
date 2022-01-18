@@ -1,0 +1,38 @@
+<launch>
+<!--   <arg name="mapname" default="asl_office_j" /> -->
+  <arg name="mapname" default="office_full" />
+  <arg name="mapfolder" default="$(find asl_pepper_motion_planning)/scripts" />
+  <arg name="downsampling_passes" default="3" />
+  <arg name="script_args" default="" />
+
+  <!-- Gmapping & Map Matching -->
+  <include file="$(find asl_pepper_gmapping)/launch/gmapping.launch">
+    <arg name="output" value="log"/>
+  </include>
+  <include file="$(find map_matcher)/launch/map_matcher.launch">
+    <arg name="output" value="log" />
+    <arg name="slam_map_topic" value="/gmap"/>
+    <arg name="reference_map_name" value="$(arg mapname)"/>
+    <arg name="maps_folder" value="$(arg mapfolder)"/>
+  </include>
+
+  <node pkg="asl_pepper_motion_planning" type="nav_evaluator"
+    name="nav_evaluator" args="" output="screen" >
+    <param name="reference_map_name" value="$(arg mapname)"/>
+    <param name="reference_map_folder" value="$(arg mapfolder)"/>
+    <param name="reference_map_downsampling_passes" value="$(arg downsampling_passes)"/>
+  </node>
+
+<!--   NavRep Planner -->
+<!--   _________________________________________________- -->
+
+  <node pkg="ros_run_command" type="ros_run_command" name="navrep_node" output="screen"
+    args="python ~/Code/pepper_ws/src/navrep/navrep_ros/scripts/ros_run_navrep"
+  />
+
+  <node pkg="rviz" type="rviz" name="rviz" output="log"
+    args="-d $(find asl_pepper_gmapping)/../rviz/live_navrep.rviz"
+  />
+
+
+</launch> 
