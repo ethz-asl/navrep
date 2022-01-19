@@ -57,6 +57,11 @@ class NavrepNode(object):
             self.STOP = False
         self.args = args
         self.lock = threading.Lock()
+        # Publishers
+        self.lidar_pub = rospy.Publisher("/reconstructed_scan", LaserScan, queue_size=1)
+        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+        self.stopped_pub = rospy.Publisher("/is_stopped", Header, queue_size=1)
+        self.resumed_pub = rospy.Publisher("/is_resumed", Header, queue_size=1)
         # Services
         if args.ian_topics:
             rospy.Service('/rvo_planner/stop_autonomous_motion', Trigger,
@@ -78,8 +83,6 @@ class NavrepNode(object):
             rospy.Subscriber("/global_planner/current_waypoint", Marker, self.waypoint_callback, queue_size=1)
         rospy.Subscriber("/pepper_robot/odom", Odometry, self.odom_callback, queue_size=1)
         rospy.Subscriber("/goal_reached", Header, self.goal_reached_callback, queue_size=1)
-        self.lidar_pub = rospy.Publisher("/reconstructed_scan", LaserScan, queue_size=1)
-        self.cmd_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
         rospy.spin()
 
     def callback(self, msg):
@@ -193,6 +196,11 @@ class NavrepNode(object):
                 cmd_vel_msg = Twist()
                 self.cmd_vel_pub.publish(cmd_vel_msg)
             self.STOP = True
+            # useful to tell other nodes that we are stopped
+            msg = Header()
+            msg.stamp = rospy.Time.now()
+            msg.frame_id = "autonomous_motion_is_stopped"
+            self.stopped_pub.publish(msg)
         return TriggerResponse(True, "")
 
     def resume_autonomous_motion_service_call(self, req):
@@ -202,6 +210,11 @@ class NavrepNode(object):
                 # assume old goal is stale, wait for new goal
                 self.goal_msg = None
             self.STOP = False
+            # useful to tell other nodes that we are no longer stopped
+            msg = Header()
+            msg.stamp = rospy.Time.now()
+            msg.frame_id = "autonomous_motion_is_resumed"
+            self.resumed_pub.publish(msg)
         return TriggerResponse(True, "")
 
 
