@@ -92,6 +92,7 @@ class WorldModelDataset(Dataset):
                     if f.endswith("scans_robotstates_actions_rewards_dones.npz")
                 ]:
                     files.append(os.path.join(dirpath, filename))
+        files = sorted(files)
         if file_limit is None:
             file_limit = len(files)
         data = {
