@@ -7,7 +7,7 @@ setup(
     name="navrep",
     description='navigation representations',
     author='Daniel Dugas',
-    version='0.0.16',
+    version='0.0.17',
     # doesn't work with pip install -e
     package_dir={'frame_msgs': "external/frame_msgs", 'tf_bag': "external/tf_bag"},
     packages=["navrep",
@@ -21,7 +21,7 @@ setup(
               "tf_bag"],
     # packages=["navrep"],
     ext_modules=cythonize("crings/crings.pyx", annotate=True),
-    python_requires='>=3.6, <3.7',
+    python_requires='>=3.6',
     install_requires=[
         'numpy', 'matplotlib', 'Cython', 'rospkg', 'pyyaml', 'numba', # 'ipython', 'flake8', 'pylint',
         'rich',
