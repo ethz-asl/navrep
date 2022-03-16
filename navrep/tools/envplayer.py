@@ -9,11 +9,12 @@ ROT_SPEED = 0.4
 
 
 class EnvPlayer(object):
-    def __init__(self, env, render_mode="human", step_by_step=False):
+    def __init__(self, env, render_mode="human", step_by_step=False, save_to_file=False):
         self.env = env
         self.render_mode = render_mode
         self.STEP_BY_STEP = step_by_step
         self.boost = False
+        self.save_to_file = save_to_file
         self.run()
 
     def key_press(self, k, mod):
@@ -96,7 +97,7 @@ class EnvPlayer(object):
                     if self.boost:
                         break
                     if not self.action_key_is_set:
-                        self.env.render(mode=self.render_mode)
+                        self.env.render(mode=self.render_mode, save_to_file=self.save_to_file)
                         time.sleep(0.01)
                     else:
                         self.action_key_is_set = False
@@ -106,7 +107,7 @@ class EnvPlayer(object):
                     self.realtime_rate.sleep()
             # step once
             obs, rew, done, info = self.env.step(self.action)
-            self.env.render(mode=self.render_mode)
+            self.env.render(mode=self.render_mode, save_to_file=self.save_to_file)
             #         impglet
             #         pygage.get_buffer_manager().get_color_buffer().save("/tmp/env{:05}.png".format(i))
             if done or self.restart:
