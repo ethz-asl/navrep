@@ -78,12 +78,12 @@ class CausalSelfAttention(nn.Module):
 
         # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
         att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-        att = att.masked_fill(
-            self.mask[:, :, :T, :T] == 0, torch.finfo(att.dtype).min
+        att = att.float().masked_fill(
+            self.mask[:, :, :T, :T] == 0, -1e10
         )
-        # using a constant messes with AMP (float16 min is -65504.0) -> we use finfo
+        # using a constant messes with AMP (float16 min is -65504.0) -> we use float() to force float32
         # todo: just use float('-inf') instead? -> leads to nans in backward
-        # (even if we replace nans with 0 after softmax)
+        # (same if we replace nans with 0 after softmax)
         # https://discuss.pytorch.org/t/apply-mask-softmax/14212/3
         att = F.softmax(att, dim=-1)
         att = self.attn_drop(att)
