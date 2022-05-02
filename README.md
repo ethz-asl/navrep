@@ -38,6 +38,12 @@ rospy:
 pip install --extra-index-url https://rospypi.github.io/simple/ rospy rosbag tf tf2_ros
 ```
 
+specific versions of Keras, gym (later versions cause errors with some user-facing scripts)
+
+```
+pip install gym==0.15.7 keras==2.3.1
+```
+
 ## Install
 
 Installing navrep is as simple as
