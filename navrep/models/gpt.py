@@ -77,23 +77,32 @@ class CausalSelfAttention(nn.Module):
         )  # (B, nh, T, hs)
 
         # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
-        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+        # without float()s, infs appear when using AMP (float16)
+#         att = (q.float() @ k.float().transpose(-2, -1)) * (1.0 / math.sqrt(k.float().size(-1)))
+        # putting small coef inside matmul to reduce risk of float16 overflow
+        # att = matmul(q, k.T) * coeff
+        att = ((q.float() * (1.0 / math.sqrt(k.float().size(-1)))) @ k.float().transpose(-2, -1))
+#         att = att.masked_fill(
+#             self.mask[:, :, :T, :T] == 0, -10000 # torch.finfo(att.dtype).min # -float('inf') # NOCOMMIT
+#         )  # todo: just use float('-inf') instead? https://discuss.pytorch.org/t/apply-mask-softmax/14212/3
+        # still getting nans, maybe we can force AMP to use float32
         att = att.float().masked_fill(
-            self.mask[:, :, :T, :T] == 0, -1e10
+            self.mask[:, :, :T, :T] == 0, -1e10 # torch.finfo(att.dtype).min # -float('inf') # NOCOMMIT
         )
-        # using a constant messes with AMP (float16 min is -65504.0) -> we use float() to force float32
-        # todo: just use float('-inf') instead? -> leads to nans in backward
-        # (same if we replace nans with 0 after softmax)
-        # https://discuss.pytorch.org/t/apply-mask-softmax/14212/3
-        att = F.softmax(att, dim=-1)
-        att = self.attn_drop(att)
-        y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        # using a constant messes with AMP (float16 min is -65504.0) -> we use finfo
+        att_sm = F.softmax(att, dim=-1)
+        # disabled because it removes nan in forward but not in backward pass
+#         att_sm = att_sm.masked_fill(torch.isnan(att_sm), 0.) # detect nan in inf
+        att_sm = self.attn_drop(att_sm)
+        y = att_sm @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
         )  # re-assemble all head outputs side by side
 
         # output projection
         y = self.resid_drop(self.proj(y))
+        if torch.isnan(y).any():
+            raise ValueError("NaNs in y!")
         return y
 
 class Block(nn.Module):
